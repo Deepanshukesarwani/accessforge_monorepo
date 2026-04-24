@@ -13,5 +13,8 @@
   "packageManager": "pnpm@10.13.1",
   "devDependencies": {
     "turbo": "^2.9.6"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@prisma/client", "sharp", "unrs-resolver"]
   }
 }
