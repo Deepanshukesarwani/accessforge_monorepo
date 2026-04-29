@@ -15,6 +15,17 @@ export const auth = betterAuth({
 
   trustedOrigins: (process.env.CORS_ORIGIN ?? "http://localhost:3000").split(","),
 
+  advanced: {
+    // Required for OAuth state cookies to work when frontend and backend
+    // are on different origins (e.g. localhost:3000 → onrender.com).
+    // Without this, the state cookie is set as SameSite=Lax and the browser
+    // drops it on cross-origin requests, causing "State not persisted" errors.
+    crossSubdomainCookies: {
+      enabled: true,
+    },
+    useSecureCookies: process.env.NODE_ENV === "production",
+  },
+
   database: mongodbAdapter(db),
   secret: process.env.BETTER_AUTH_SECRET,
 
