@@ -1,23 +1,35 @@
 import "dotenv/config";
 import cors from "cors";
-import express, { NextFunction, Request, Response } from "express";
-import { prisma } from "./lib/prisma";
-
+import express, { type NextFunction, type Request, type Response } from "express";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "../lib/auth";
+import { prisma } from "./lib/prisma";
+import { router } from "./routes/index";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:3000";
+const PORT = process.env.PORT ?? 5000;
+const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:3000";
 
-app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+app.use(
+  cors({
+    origin: CORS_ORIGIN.split(","),
+    credentials: true,
+  })
+);
+
+// Better Auth handler must be registered before express.json() because
+// it reads the raw request body itself for some routes.
+app.all("/api/auth/*splat", toNodeHandler(auth));
+
 app.use(express.json());
 
-app.all("/api/auth/*splat", toNodeHandler(auth));
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+app.use("/api", router);
+
+// Global error handler — must be the last middleware registered.
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: "Internal server error" });
